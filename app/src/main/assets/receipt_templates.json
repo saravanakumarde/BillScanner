@@ -1,0 +1,183 @@
+[
+  {
+    "id": "rewe_de",
+    "displayName": "REWE",
+    "comment": "German REWE supermarket till receipts. REWE never prints its brand name near the top of the receipt (only far down in the footer, 'REWE Markt GmbH'), so the generic parser cannot reliably recognize the store name. Built from 4 real receipts, all from the Frauentorstr. 39, 86152 Augsburg branch (Markt:0784): 2026-06-16 (EC-Cash/girocard, with extra 'Kundenbeleg' card-terminal block), 2026-09-30, 2026-10-01 and 2026-10-02 (VISA; the last has 19% tax class A and multi-quantity lines). identifierLines is the VAT ID only: CONFIRMED against rewe.de/impressum that DE812706034 is the company-wide USt-IdNr. of REWE Markt GmbH, so this template covers every REWE Markt GmbH-run branch. CAVEAT: independent REWE retailers (Kaufleute) operate under their own legal entity and VAT ID, so their receipts will NOT match; they need their own template if wanted. Item layout: name on its own line, right-aligned price + tax class letter (A=19%, B=7%) in the EUR column, so OCR may split name and price into separate lines. Quantity lines ('2 Stk x 2,49', '0,848 kg x 2,79 EUR/kg') sit between a name and its price; the price after them is the LINE TOTAL, not the unit price. namePattern rejects these lines, lines that are themselves a price ('1,00 B', 'EUR 2,59'), a bare 'EUR' column header, 'Nr.', letterless lines (barcode digits, dates) and long unbroken tokens of 24+ chars (TSE-signature base64 fragments). Exclusions are deliberately specific ('86152' instead of 'augsburg', 'mit diesem einkauf' instead of 'einkauf') so real product names like AUGSBURGER... or EINKAUFSTASCHE are not blocked. Total: only the SUMME line; the later 'EUR 2,59' lines and the tax table also match pricePattern, so the parser must stop reading items at SUMME. UNSEEN so far: negative lines (Pfand refunds, discounts), so pricePattern does not accept a minus sign yet. [v20 fix: namePattern's character class now also allows '%', since a product name like 'MILCH 3,8%' was being rejected outright — verified with a synthetic test before this fix. Also fixed in the matching engine itself (not this JSON): the same-line name+price shape now requires a space before the trailing tax-class letter, so a name ending in a glued unit like 'WEIN ROT 0,75L' is no longer mis-split into a fake item '0,75' priced with tax class 'L'.]",
+    "identifierLines": [
+      "DE812706034"
+    ],
+    "currency": "EUR",
+    "language": "de",
+    "totalRule": {
+      "linePattern": "SUMME.*?(\\d{1,3}(?:[.,]\\d{3})*[.,]\\d{2})"
+    },
+    "dateRule": {
+      "linePattern": "(?<!\\d)(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})(?!\\d)"
+    },
+    "itemsRule": {
+      "namePattern": "^(?!(?:EUR\\s+)?\\d{1,3}(?:[.,]\\d{3})*[.,]\\d{2}\\s*[A-Za-z]?\\s*$)(?!EUR$)(?!Nr\\.$)(?![A-Za-z0-9/]{24,}$)(?!.*\\d\\s*(?:Stk|kg)\\.?\\s*x)(?=.*[A-Za-zÄÖÜäöüß])[A-Za-zÄÖÜäöüß0-9.,/%\\- ]{2,40}$",
+      "pricePattern": "^(?:EUR\\s+)?(\\d{1,3}(?:[.,]\\d{3})*[.,]\\d{2})\\s*([A-Za-z])?\\s*$",
+      "nameExclusions": [
+        "summe",
+        "geg.",
+        "steuer",
+        "netto",
+        "brutto",
+        "gesamtbetrag",
+        "betrag",
+        "tse-",
+        "signatur",
+        "transaktion",
+        "seriennn",
+        "seriennummer",
+        "markt:",
+        "kasse:",
+        "bed.:",
+        "bon-nr",
+        "uid nr",
+        "frauentorstr",
+        "86152",
+        "bonus-kunde",
+        "bonus-guthaben",
+        "bonus-aktionen",
+        "rewe app",
+        "rewe markt gmbh",
+        "mit diesem einkauf",
+        "coupons",
+        "vorteile",
+        "vereinsschein",
+        "fragen",
+        "antworten",
+        "www.rewe.de",
+        "barcode",
+        "bonts",
+        "a= 19",
+        "a=19",
+        "b= 7",
+        "b=7",
+        "kundenbeleg",
+        "zahlung",
+        "contactless",
+        "girocard",
+        "mastercard",
+        "ec-cash",
+        "terminal-id",
+        "pos-info",
+        "as-zeit",
+        "beleg-nr",
+        "trace-nr",
+        "datum",
+        "uhrzeit",
+        "***"
+      ],
+      "itemLayout": "SPLIT_OR_SAME_LINE"
+    }
+  },
+  {
+    "id": "mueller_de",
+    "displayName": "Müller",
+    "comment": "German Müller (drugstore/stationery/toys) till receipts. Built from 2 real receipts, both from the Annastrasse 8-10, 86150 Augsburg branch: 2026-09-09 (13 items, 7% and 19%) and 2026-10-02 (5 items, 7% only, followed by several printed promo coupons). The brand is a logo image, so OCR cannot rely on it; the small header line 'MH Müller Handels GmbH, Albstraße 92, 89081 Ulm' is tiny and OCR-unreliable. Identification uses the footer VAT ID ('USt-IdNr.:DE811647055') TOGETHER with the branch address 'Annastrasse 8-10' (deliberately narrow). UNCONFIRMED: web searches could not confirm whether DE811647055 is used on every Müller branch's receipts, so only this branch is covered. If it is chain-wide, identifierLines can be loosened to just the VAT ID. Also, the address line is printed in tiny type; if OCR garbles it, matching will fail and the VAT ID alone may be the safer choice. LAYOUT DIFFERS FROM REWE: each item is ONE line: '<qty> <name, max ~21 chars> <unit price> [<Nachlass>] <line total><tax letter>', e.g. '1 HEFT A4 16BL LIN.40 0,35 0,35b'. The tax letter is lowercase and glued to the amount. ASSUMPTION about the parser: for this template namePattern and pricePattern are both applied to the same full line; namePattern group 1 = item name, pricePattern group 1 = line total (Summe column, not the unit price), group 2 = tax letter. Letter meaning is the OPPOSITE of REWE: a = 7%, b = 19% (the receipt's own MwSt table prints 'a: 7,00' and 'b:19,00', so prefer reading the mapping from that table). Totals: 'ZU BEZAHLEN' line. Item lines must start with a quantity and end with price+letter, so the Zwischensumme line, MwSt table, card block and promo coupons never match pricePattern/namePattern on structure alone; nameExclusions is only a second safety net and is kept deliberately short (no words like 'rabatt', 'artist', 'credit', 'debit', 'summe', 'datum', which could occur in real product names). Date: the first dd.mm.yyyy in the receipt is the purchase date ('Datum:' line / footer); later promo coupons print campaign dates like '31.10.2026', so the parser must take the FIRST match, not the last. UNSEEN so far: quantities above 1, the Nachlass (discount) column with a non-zero value, negative lines (returns/Pfand), cash payments (no card block), and other tax rates. The optional Nachlass group in the patterns is a guess at its format and is untested against a real receipt.",
+    "identifierLines": [
+      "Annastrasse 8-10",
+      "DE811647055"
+    ],
+    "currency": "EUR",
+    "language": "de",
+    "totalRule": {
+      "linePattern": "(?i)ZU\\s+BEZAHLEN.*?(\\d{1,3}(?:[.,]\\d{3})*[.,]\\d{2})"
+    },
+    "dateRule": {
+      "linePattern": "(?<!\\d)(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})(?!\\d)"
+    },
+    "itemsRule": {
+      "namePattern": "^\\s*\\d{1,3}\\s+([A-Za-zÄÖÜäöüß0-9][^\\s]*(?:\\s+[^\\s]+)*?)\\s+\\d{1,3}(?:[.,]\\d{3})*[.,]\\d{2}(?:\\s+-?\\d{1,3}(?:[.,]\\d{3})*[.,]\\d{2})?\\s+\\d{1,3}(?:[.,]\\d{3})*[.,]\\d{2}\\s*[A-Za-z]\\s*$",
+      "pricePattern": "(?:^|\\s)(\\d{1,3}(?:[.,]\\d{3})*[.,]\\d{2})\\s*([A-Za-z])\\s*$",
+      "nameExclusions": [
+        "zwischensumme",
+        "zu bezahlen",
+        "kartenzahlung",
+        "contactless",
+        "beleg-nr",
+        "trace nr",
+        "trace-nr",
+        "vu-nr",
+        "genehmigungs",
+        "terminal-id",
+        "pos-info",
+        "as-zeit",
+        "emv-daten",
+        "betrag eur",
+        "autorisierung",
+        "mwst",
+        "vielen dank",
+        "kundenservice",
+        "www.mueller.de",
+        "umtausch",
+        "kassenbon",
+        "kontrollstellencode",
+        "ust-idnr",
+        "mueller handels"
+      ],
+      "itemLayout": "SAME_LINE_ONLY"
+    }
+  },
+  {
+    "id": "dm_de",
+    "displayName": "dm",
+    "comment": "German dm-drogerie markt till receipts. Built from 1 real receipt: dm Augsburg, Bürgermeister-Fischer-Straße 5, 2026-09-29, 3 printed item lines (one of them a cancelled line), card payment. Identification: the receipt prints NO VAT ID, only a Steuer-Nr. ('Steuer-Nr.:34092/30007'), and I could not confirm it is the same on every branch. The header prints the company name as plain text ('dm-drogerie markt', next to the logo), which is unique and branch-independent, so identifierLines uses that only. If OCR misses it, '34092/30007' is the fallback candidate once confirmed chain-wide. LAYOUT: one line per item: '<name, max ~30 chars>  <price>  <tax code digit>', e.g. 'babylove Wind. Prem. Gr.3 46St   5,55 1'. The trailing single digit is a TAX CODE, explained in the MwSt table ('1=19,00%'), not a quantity. ASSUMPTION about the parser: namePattern and pricePattern are applied to the same full line; namePattern group 1 = item name, pricePattern group 1 = amount (may start with '-'), group 2 = tax code digit. CANCELLATIONS: this receipt scanned a diaper pack (18,95), cancelled it, and printed 'ZEILENSTORNO' followed by the same product with a NEGATIVE price (-18,95). Both lines match the item rules; the parser must sum all item lines including negatives (or drop the pair) or the item total will be wrong (here 18,95 + -18,95 + 5,55 + 5,55 = 11,10). The 'Zwischensumme 0,00' line after a cancellation is not an item. Total: only 'SUMME EUR <amount>' in capitals (case-sensitive and not preceded by a letter, so 'Zwischensumme 0,00' can't match). 'VISA EUR -11,10' is the payment line and is shown with a minus sign. Date: first dd.mm.yyyy on the receipt (top line '29.09.2026 19:01 D1K9/5 ...'); the Kundenbeleg block repeats it. The TSE block (SN-TSE, Signatur lines) and the Kundenbeleg card block are rejected by structure (item lines must end with price + single digit), so nameExclusions is only a short safety net. UNSEEN so far: quantity lines for multiple identical items, other tax codes (e.g. 7%), PAYBACK coupon/discount lines, deposit (Pfand) lines, cash payment, and names that wrap onto a second line.",
+    "identifierLines": [
+      "dm-drogerie markt"
+    ],
+    "currency": "EUR",
+    "language": "de",
+    "totalRule": {
+      "linePattern": "(?<![A-Za-z])SUMME\\s+EUR\\s+(\\d{1,3}(?:[.,]\\d{3})*[.,]\\d{2})"
+    },
+    "dateRule": {
+      "linePattern": "(?<!\\d)(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4})(?!\\d)"
+    },
+    "itemsRule": {
+      "namePattern": "^\\s*(?=.*[A-Za-zÄÖÜäöüß])([A-Za-zÄÖÜäöüß0-9][^\\s]*(?:\\s+[^\\s]+)*?)\\s+-?\\d{1,3}(?:[.,]\\d{3})*[.,]\\d{2}\\s+\\d\\s*$",
+      "pricePattern": "(?:^|\\s)(-?\\d{1,3}(?:[.,]\\d{3})*[.,]\\d{2})\\s+(\\d)\\s*$",
+      "nameExclusions": [
+        "zeilenstorno",
+        "zwischensumme",
+        "fiskalinformationen",
+        "kundenbeleg",
+        "payback",
+        "steuer-nr"
+      ],
+      "itemLayout": "SAME_LINE_ONLY"
+    }
+  },
+  {
+    "id": "ca_de",
+    "displayName": "C&A",
+    "comment": "German C&A clothing-store till receipts. Built from 1 real receipt: C&A Augsburg, Bahnhofstrasse 20 (Filiale 490064), 2026-09-29, 4 items, card payment. The brand is a logo image plus a QR code at the top, so OCR cannot rely on it; identification uses the footer VAT ID 'USt-ID-Nr.: DE121280555'. CONFIRMED against c-and-a.com/de/de/corporate/impressum that DE121280555 is the USt-IdNr. of C&A Mode GmbH & Co. KG (the company-wide German VAT ID), so this template is not tied to one branch. LAYOUT (3 lines per item, price comes FIRST): line 1 = '<article number, 14 digits>  <tax letter>  <price>' e.g. '04070416187431  A  6,99'; line 2 = item name in capitals, e.g. 'J BB TOPS'; line 3 = 'Farbe 1  Größe 080' (ignored). ASSUMPTION about the parser: pricePattern is applied to line 1 and namePattern to line 2 of each item block, and the two are paired in order of appearance (price line BEFORE name line, the reverse of REWE). If your parser pairs a name with the price line that FOLLOWS it, this pairing will be shifted by one and the template needs a different approach. pricePattern keeps the usual capture order (group 1 = amount, group 2 = tax letter) even though the letter is printed first, using a lookahead. A = 19% on this receipt (MwSt table: 'A 19,00 %'); no other letter was seen. namePattern accepts only CAPITAL-letter lines with at least two consecutive letters; this rejects mixed-case boilerplate, the spaced-out '+ K U N D E N B E L E G +' banner, a bare 'EUR', a VAT ID line and a 'C&A' logo line; the all-capitals card line 'EMV-AID A0000000031010' is the one boilerplate line that gets through, so it is in nameExclusions. Product names that print in lowercase would be missed. Total: 'Summe (EUR)' line. This receipt shows TWO 'Kundenbeleg' card blocks (first 'Declined', second 'Approved'), both with the same amount: do not count the amount twice. Date: first dd.mm.yyyy is in the Kundenbeleg ('Datum 29.09.2026'); the footer table prints a 2-DIGIT year ('29.09.26'), so dateRule accepts 2 or 4 digits in group 3 and the parser must expand a 2-digit year. A cash receipt (no Kundenbeleg) would only have the 2-digit form; this is untested. UNSEEN so far: other tax letters, quantities above 1, discounts/returns (negative lines), cash payment, items whose name wraps onto a second line, and lowercase product names. [v20 fix: namePattern is now matched CASE-SENSITIVELY (the engine previously compiled every template's namePattern case-insensitively, which silently defeated this template's deliberate all-caps filter and would have let mixed-case boilerplate slip through as a fake item name) — verified with a synthetic test before this fix.]",
+    "identifierLines": [
+      "DE121280555"
+    ],
+    "currency": "EUR",
+    "language": "de",
+    "totalRule": {
+      "linePattern": "Summe\\s*\\(EUR\\)\\s*(\\d{1,3}(?:[.,]\\d{3})*[.,]\\d{2})"
+    },
+    "dateRule": {
+      "linePattern": "(?<!\\d)(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4}|\\d{2})(?!\\d)"
+    },
+    "itemsRule": {
+      "namePattern": "^(?!DE\\d{9}$)(?!C\\W{0,2}A$)(?!EUR$)(?=.*[A-Z]{2})[A-Z0-9&][A-Z0-9&.\\-/+ ]{1,40}$",
+      "pricePattern": "^(?=.*\\s(\\d{1,3}(?:[.,]\\d{3})*[.,]\\d{2})\\s*$)\\d{8,14}\\s+([A-Za-z])\\s+\\d{1,3}(?:[.,]\\d{3})*[.,]\\d{2}\\s*$",
+      "nameExclusions": [
+        "kundenbeleg",
+        "emv-aid",
+        "aid59",
+        "payback",
+        "mwst",
+        "ust-id"
+      ],
+      "itemLayout": "PRICE_THEN_NAME",
+      "namePatternCaseSensitive": true
+    }
+  }
+]

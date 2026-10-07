@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!--
+        Deliberately Light, NOT DayNight. Every screen in this app uses
+        hardcoded light colors for its own backgrounds (see colors.xml:
+        background, surface, divider, text_primary/secondary are literal
+        values, not theme attributes). DayNight would flip theme-driven
+        colors — MaterialCardView's default background, TextInputEditText's
+        text color, dialog backgrounds, etc. — to their dark-mode values
+        whenever the phone's system dark mode is on (including by its
+        automatic sunset/sunrise schedule), while those hardcoded
+        backgrounds stayed light. That mismatch is what made the home
+        screen's cards render as unreadable black tiles and made typed/
+        recognized text on the scan-review screen nearly invisible (light
+        text on a light background) — the data was there, just impossible
+        to see. Forcing Light here keeps every screen's contrast correct
+        no matter the phone's system theme setting.
+    -->
+    <style name="Theme.BillScanner" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/accent</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="android:statusBarColor">@color/primary_dark</item>
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <!-- Belt-and-suspenders: stops Android 10+'s automatic "force dark"
+             post-processing from re-inverting colors on top of this theme. -->
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
+    </style>
+
+    <style name="Theme.BillScanner.Toolbar" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar" />
+</resources>

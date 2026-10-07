@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Camera to photograph bills -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+
+    <!-- Reading the Gallery to locate the photo just taken by the external
+         Camera app, and to move it into our own folder. Required on
+         Android 13+ (READ_MEDIA_IMAGES) and Android 10-12 (READ_EXTERNAL_STORAGE)
+         to QUERY MediaStore for images this app didn't create itself. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <!-- Writing images to the shared Gallery via MediaStore.
+         On API 28 and below MediaStore insert additionally needs WRITE_EXTERNAL_STORAGE. -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
+    <application
+        android:name=".BillScannerApp"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.BillScanner"
+        android:localeConfig="@xml/locales_config"
+        tools:targetApi="33">
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.scan.ScanActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.review.ReviewActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.detail.BillDetailActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.detail.PhotoViewerActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.items.ItemPriceListActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.list.BillListActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.stats.CategoryStatsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.stats.StoreStatsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.category.ManageCategoriesActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.settings.SettingsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.log.ActivityLogActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.stores.LearnedStoresActivity"
+            android:exported="false" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+    </application>
+</manifest>

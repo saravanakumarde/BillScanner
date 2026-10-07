@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/Theme.BillScanner.Toolbar">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/primary"
+            app:title="@string/app_name"
+            app:titleTextColor="@color/white" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/surface">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:id="@+id/tvGrandTotalLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/grand_total"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/tvGrandTotal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="€0.00"
+                        android:textColor="@color/text_primary"
+                        android:textSize="32sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:rowCount="4">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardAllBills"
+                    style="@style/HomeCardStyle">
+                    <LinearLayout style="@style/HomeCardInner">
+                        <TextView style="@style/HomeCardIcon" android:text="🧾" />
+                        <TextView style="@style/HomeCardLabel" android:text="@string/all_bills" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardThisWeek"
+                    style="@style/HomeCardStyle">
+                    <LinearLayout style="@style/HomeCardInner">
+                        <TextView style="@style/HomeCardIcon" android:text="📅" />
+                        <TextView style="@style/HomeCardLabel" android:text="@string/this_week" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardThisMonth"
+                    style="@style/HomeCardStyle">
+                    <LinearLayout style="@style/HomeCardInner">
+                        <TextView style="@style/HomeCardIcon" android:text="🗓️" />
+                        <TextView style="@style/HomeCardLabel" android:text="@string/this_month" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardByCategory"
+                    style="@style/HomeCardStyle">
+                    <LinearLayout style="@style/HomeCardInner">
+                        <TextView style="@style/HomeCardIcon" android:text="🏷️" />
+                        <TextView style="@style/HomeCardLabel" android:text="@string/by_category" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardByStore"
+                    style="@style/HomeCardStyle">
+                    <LinearLayout style="@style/HomeCardInner">
+                        <TextView style="@style/HomeCardIcon" android:text="🏬" />
+                        <TextView style="@style/HomeCardLabel" android:text="@string/by_store" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardItemPrices"
+                    style="@style/HomeCardStyle">
+                    <LinearLayout style="@style/HomeCardInner">
+                        <TextView style="@style/HomeCardIcon" android:text="💰" />
+                        <TextView style="@style/HomeCardLabel" android:text="@string/item_prices" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardSettings"
+                    style="@style/HomeCardStyle">
+                    <LinearLayout style="@style/HomeCardInner">
+                        <TextView style="@style/HomeCardIcon" android:text="🔧" />
+                        <TextView style="@style/HomeCardLabel" android:text="@string/settings" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardActivityLog"
+                    style="@style/HomeCardStyle">
+                    <LinearLayout style="@style/HomeCardInner">
+                        <TextView style="@style/HomeCardIcon" android:text="📋" />
+                        <TextView style="@style/HomeCardLabel" android:text="@string/activity_log" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+            </GridLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabScan"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="24dp"
+        android:contentDescription="@string/scan_bill"
+        android:src="@android:drawable/ic_menu_camera"
+        app:backgroundTint="@color/accent"
+        app:tint="@color/white" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

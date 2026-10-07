@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Bill Scanner</string>
+
+    <string name="scan_bill">Scan Bill</string>
+    <string name="all_bills">All Bills</string>
+    <string name="this_week">This Week</string>
+    <string name="this_month">This Month</string>
+    <string name="by_category">By Category</string>
+    <string name="by_store">By Store</string>
+    <string name="manage_categories">Manage Categories</string>
+    <string name="manage_categories_desc">Add, rename, recolor, or delete the categories bills are sorted into.</string>
+    <string name="item_prices">Item Prices</string>
+    <string name="no_items_yet">No items recorded yet. Items appear here once you scan a bill.</string>
+
+    <string name="capture">Capture</string>
+    <string name="retake">Retake</string>
+    <string name="use_photo">Use Photo</string>
+    <string name="processing">Reading receipt…</string>
+    <string name="confirm_use_photo">Is this the receipt you just photographed?</string>
+
+    <string name="settings">Settings</string>
+    <string name="scan_detection_mode_title">Photo detection after scanning</string>
+    <string name="scan_detection_mode_desc">Choose how Bill Scanner finds the photo you just took in the camera app. Try both and keep whichever works best on your phone.</string>
+    <string name="scan_mode_automatic">Automatic</string>
+    <string name="scan_mode_automatic_desc">Detects the new photo as soon as you return to Bill Scanner.</string>
+    <string name="scan_mode_manual">Manual</string>
+    <string name="scan_mode_manual_desc">You tap \"Find my photo\" yourself after returning. More reliable on some phones.</string>
+    <string name="find_my_photo">Find my photo</string>
+    <string name="waiting_for_photo">Take your photo in the camera app, then come back here and tap the button below.</string>
+    <string name="choose_source_title">Add a bill</string>
+    <string name="choose_source_camera">Take Photo</string>
+    <string name="choose_source_camera_desc">Open the camera app to photograph a receipt</string>
+    <string name="choose_source_gallery">Choose from Gallery</string>
+    <string name="choose_source_gallery_desc">Pick a photo you already took</string>
+    <string name="choose_source_manual">Enter Manually</string>
+    <string name="choose_source_manual_desc">Add a bill without a photo, e.g. if you lost the receipt</string>
+
+    <string name="delete_category_title">Delete category?</string>
+    <string name="delete_category_cannot_delete_other">The \"Other\" category can\'t be deleted \u2014 it\'s used as the fallback for uncategorized bills.</string>
+    <string name="delete_category_no_bills">Delete \"%1$s\"? No bills currently use this category.</string>
+    <string name="delete_category_has_bills">"%1$d bill(s) currently use \"%2$s\". Choose a category to move them to before deleting:"</string>
+    <string name="delete_category_confirm">Delete</string>
+
+    <string name="store_name">Store</string>
+    <string name="date">Date</string>
+    <string name="total">Total</string>
+    <string name="category">Category</string>
+    <string name="original_text">Original text</string>
+    <string name="english_text">English</string>
+    <string name="items">Items</string>
+    <string name="add_item">Add item</string>
+    <string name="notes">Notes</string>
+    <string name="notes_hint">Add any notes about this bill (optional)</string>
+    <string name="no_photo_manual_entry">No photo — entered manually</string>
+    <string name="save_bill">Save Bill</string>
+    <string name="discard">Discard</string>
+
+    <string name="grand_total">Grand total</string>
+    <string name="no_bills_yet">No bills scanned yet. Tap the camera button to add your first one.</string>
+
+    <string name="add_category">Add category</string>
+    <string name="category_name_hint">Category name</string>
+
+    <string name="camera_permission_needed">Camera permission is needed to scan bills.</string>
+    <string name="grant_permission">Grant permission</string>
+
+    <string name="week_prefix">Week of</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="edit_bill">Edit Bill</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm_delete_bill">Delete this bill? This cannot be undone.</string>
+    <string name="view_original_image">View scanned image</string>
+    <string name="rotate_left">Rotate left</string>
+    <string name="rotate_right">Rotate right</string>
+    <string name="template_matched_format">Recognized as %1$s \u2014 fields filled from a verified template</string>
+    <string name="export_all_data">Export All Data</string>
+    <string name="export_all_data_desc">Saves every bill\'s photo (renamed) and all entered details as a JSON file into your phone\'s Pictures and Downloads folders, and also offers to share a single zip of everything. Nothing is uploaded anywhere.</string>
+    <string name="export_all_data_button">Export All Bills</string>
+    <string name="export_in_progress">Exporting\u2026</string>
+    <string name="export_done_format">Exported %1$d bill(s), %2$d photo(s) to Pictures/BillScannerExport and Downloads/BillScannerExport.</string>
+    <string name="export_done_with_skipped_format">Exported %1$d bill(s), %2$d photo(s) (%3$d bill(s) had no readable photo). Saved to Pictures/BillScannerExport and Downloads/BillScannerExport.</string>
+    <string name="export_nothing_to_export">No bills to export yet.</string>
+    <string name="export_failed">Export failed. Nothing was changed.</string>
+    <string name="export_share_title">Share exported bills</string>
+    <string name="compare_with_generic_parser">Compare with generic parser result \u25be</string>
+    <string name="compare_with_generic_parser_hide">Hide comparison \u25b4</string>
+
+    <string name="delete_photo_setting_title">Deleting a bill</string>
+    <string name="delete_photo_setting_desc">By default, deleting a bill in the app leaves its photo saved. Turn this on to also delete the photo itself.</string>
+    <string name="delete_photo_setting_switch_label">Also delete the bill\'s photo</string>
+    <string name="learned_stores_title">Learned stores</string>
+    <string name="learned_stores_desc">When you correct a bill\'s store name or category, the app remembers that shop (using its address/phone from the receipt text) and applies your correction automatically next time. Nothing is sent anywhere — it\'s stored only on this device.</string>
+    <string name="reset_learned_stores">Forget all learned stores (%1$d saved)</string>
+    <string name="reset_learned_stores_empty">No learned stores yet</string>
+    <string name="learned_stores_cleared">Learned store data cleared</string>
+    <string name="activity_log">Activity Log</string>
+    <string name="activity_log_desc">A local record of what was auto-extracted, what you corrected, and what the app learned. Nothing leaves your device unless you tap Export.</string>
+    <string name="no_log_entries">Nothing logged yet. Scan or correct a bill to see entries here.</string>
+    <string name="export">Export</string>
+    <string name="clear_all">Clear All</string>
+    <string name="confirm_clear_log">Delete the entire activity log? This cannot be undone.</string>
+    <string name="confirm_clear_learned_stores">Forget all learned stores? This cannot be undone.</string>
+    <string name="log_cleared">Activity log cleared</string>
+    <string name="view_learned_stores">View Learned Stores</string>
+    <string name="learned_stores_screen_desc">Stores the app has learned a correction for. Matched automatically on future scans by stable text (address/phone) from the receipt, not by the store name itself.</string>
+    <string name="no_learned_stores">No stores learned yet. Correct a bill\'s store name or category and save it to teach the app.</string>
+</resources>

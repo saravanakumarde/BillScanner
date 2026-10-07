@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingVertical="8dp"
+    android:gravity="center_vertical">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/etItemNameEnglish"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/english_text"
+            android:textSize="15sp"
+            android:inputType="text"
+            android:background="@null" />
+
+        <TextView
+            android:id="@+id/tvItemNameOriginal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary" />
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/etItemPrice"
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:inputType="numberDecimal"
+        android:gravity="end"
+        android:textSize="15sp"
+        android:background="@null" />
+
+    <ImageButton
+        android:id="@+id/btnDeleteItem"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginStart="4dp"
+        android:src="@android:drawable/ic_menu_delete"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/delete" />
+
+</LinearLayout>
