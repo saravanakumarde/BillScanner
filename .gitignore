@@ -1,0 +1,18 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuildTargets
+.cxx
+local.properties
+*.keystore
+*.jks
+# Exception: the stable debug/release signing key is intentionally
+# committed so every CI build is signed identically and can be
+# installed over the previous one without uninstalling (see
+# app/build.gradle.kts). This is a personal-use signing key only,
+# not used to publish to any app store.
+!app/keystore/billscanner-release.keystore
