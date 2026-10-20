@@ -107,6 +107,8 @@ class CustomerCardListActivity : AppCompatActivity() {
         // photo (it IS a photo of the card), so that option is hidden here.
         view.findViewById<android.view.View>(R.id.optionManual).visibility = android.view.View.GONE
         view.findViewById<android.view.View>(R.id.dividerBeforeManual).visibility = android.view.View.GONE
+        view.findViewById<android.view.View>(R.id.optionPdf).visibility = android.view.View.GONE
+        view.findViewById<android.view.View>(R.id.dividerBeforePdf).visibility = android.view.View.GONE
 
         val dialog = com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
             .setTitle(R.string.choose_card_source_title)

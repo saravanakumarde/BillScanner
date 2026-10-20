@@ -109,6 +109,19 @@
     <string name="version_history">Version History</string>
     <string name="choose_card_source_title">Add a card photo</string>
     <string name="version_history_content"><![CDATA[
+<b>v26</b><br/>
+&#8226; Home screen now shows Spent this month and Fixed &amp; EMIs due, and the two together. Tap either to open it<br/>
+&#8226; Fixed: totals were sometimes read from the date (for example 30.09 instead of 2.59) or from a time stamp. Dates, times and weights are no longer mistaken for amounts<br/>
+&#8226; Dates are found far more often: OCR slips (3O.O9.2O26), dates split over two lines and written months (7. Oktober 2026) are understood. Impossible dates (year 2028 or 2010) are rejected<br/>
+&#8226; Store names: labels such as Total, Quantity, Receipt or Farbe 1 are no longer picked as the shop. More shops are recognised (KFC, Lieferando, New Yorker and others)<br/>
+&#8226; Store learning rewritten: it now keeps only lines that identify the shop (VAT number, phone, address), merges repeats into one entry and no longer mixes shops up. Existing entries are tidied automatically<br/>
+&#8226; Templates: Müller and dm are recognised reliably. REWE, Müller, dm and C&amp;A fall back to the general reader for anything they miss, and a missing total is taken from the items<br/>
+&#8226; Export All Data now includes the OCR text of every bill<br/>
+<br/>
+<b>v25</b><br/>
+&#8226; Bills can now be imported from a PDF (for example an Amazon invoice): choose Choose PDF when adding a bill, or share the PDF to Bill Scanner from Gmail, your browser or the Files app<br/>
+&#8226; PDF bills are stored as the original PDF, shown with a page viewer, and included in Export All Data<br/>
+<br/>
 <b>v24</b><br/>
 &#8226; New tile: Fixed &amp; EMIs. Track fixed monthly expenses and EMIs that run for a set number of months, with installments paid, end month and balance still to pay<br/>
 &#8226; Home screen tiles re-arranged into groups<br/>
@@ -196,4 +209,15 @@
     <string name="rec_since_ongoing_format">Since %1$s  •  ongoing</string>
     <string name="delete_recurring">Delete</string>
     <string name="delete_recurring_confirm">Delete this entry? This cannot be undone.</string>
+    <string name="choose_source_pdf">Choose PDF</string>
+    <string name="choose_source_pdf_desc">Import an invoice PDF, e.g. from Amazon</string>
+    <string name="pdf_import_reading">Reading PDF...</string>
+    <string name="pdf_import_page_format">Reading page %1$d of %2$d...</string>
+    <string name="pdf_import_failed">Could not read this PDF. It may be damaged or password protected.</string>
+    <string name="pdf_page_indicator_format">Page %1$d of %2$d</string>
+    <string name="pdf_previous_page">Previous page</string>
+    <string name="pdf_next_page">Next page</string>
+    <string name="home_spent_this_month">Spent this month</string>
+    <string name="home_fixed_emis">Fixed &amp; EMIs due</string>
+    <string name="home_month_together_format">Together this month: %1$s</string>
 </resources>

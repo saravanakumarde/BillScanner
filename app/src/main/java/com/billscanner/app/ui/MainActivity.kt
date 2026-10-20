@@ -29,6 +29,12 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.card.MaterialCardView
 import android.widget.TextView
 import kotlinx.coroutines.launch
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
+import com.billscanner.app.data.db.RecurringExpense
+import com.billscanner.app.util.DateFormat
+import com.billscanner.app.util.RecurringSchedule
+import java.util.Calendar
 
 class MainActivity : AppCompatActivity() {
 
@@ -90,7 +96,50 @@ class MainActivity : AppCompatActivity() {
                 CurrencyFormat.format(total ?: 0.0, "EUR")
         }
 
+        // Spent this month / Fixed & EMIs due, under the grand total. Tapping either
+        // opens the screen behind it, so the number can be checked right away.
+        app.database.recurringExpenseDao().observeAll().observe(this) { list ->
+            recurringList = list
+            updateMonthStats()
+        }
+        findViewById<android.view.View>(R.id.layoutMonthSpent).setOnClickListener {
+            BillListActivity.start(this, ListFilter.ThisMonth)
+        }
+        findViewById<android.view.View>(R.id.layoutMonthFixed).setOnClickListener {
+            com.billscanner.app.ui.recurring.RecurringExpensesActivity.start(this)
+        }
+
         migratePhotosIfNeeded()
+    }
+
+    private var monthSpent = 0.0
+    private var recurringList: List<RecurringExpense> = emptyList()
+    private var monthSpentLive: LiveData<Double>? = null
+    private val monthSpentObserver = Observer<Double?> { value ->
+        monthSpent = value ?: 0.0
+        updateMonthStats()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Re-created every time the screen comes back, so a new month (or a new day, for
+        // an EMI that just started) is picked up without restarting the app.
+        monthSpentLive?.removeObserver(monthSpentObserver)
+        val live = app.database.billDao().observeTotalInRange(DateFormat.startOfThisMonth(), DateFormat.endOfThisMonth())
+        monthSpentLive = live
+        live.observe(this, monthSpentObserver)
+        updateMonthStats()
+    }
+
+    private fun updateMonthStats() {
+        val now = Calendar.getInstance()
+        val year = now.get(Calendar.YEAR)
+        val month = now.get(Calendar.MONTH) + 1
+        val fixedAndEmis = recurringList.filter { RecurringSchedule.isDueInMonth(it, year, month) }.sumOf { it.amount }
+        findViewById<TextView>(R.id.tvMonthSpent).text = CurrencyFormat.format(monthSpent, "EUR")
+        findViewById<TextView>(R.id.tvMonthFixed).text = CurrencyFormat.format(fixedAndEmis, "EUR")
+        findViewById<TextView>(R.id.tvMonthTogether).text =
+            getString(R.string.home_month_together_format, CurrencyFormat.format(monthSpent + fixedAndEmis, "EUR"))
     }
 
     /**
@@ -186,6 +235,10 @@ class MainActivity : AppCompatActivity() {
         view.findViewById<android.widget.LinearLayout>(R.id.optionGallery).setOnClickListener {
             dialog.dismiss()
             ScanActivity.start(this, ScanActivity.SOURCE_GALLERY)
+        }
+        view.findViewById<android.widget.LinearLayout>(R.id.optionPdf).setOnClickListener {
+            dialog.dismiss()
+            com.billscanner.app.ui.scan.PdfImportActivity.start(this)
         }
         view.findViewById<android.widget.LinearLayout>(R.id.optionManual).setOnClickListener {
             dialog.dismiss()

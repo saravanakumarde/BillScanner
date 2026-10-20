@@ -39,6 +39,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import com.billscanner.app.util.BillImageLoader
 
 /**
  * Holds the last parsed receipt + raw OCR text in memory so it can cross the
@@ -128,6 +129,8 @@ class ReviewActivity : AppCompatActivity() {
     // own — shown small, for comparison, per the user's request to be able
     // to check the new template mechanism against the existing one.
     private var matchedTemplateId: String? = null
+    /** Which fields the template missed and the generic parser filled in (empty if none); shown in the activity log. */
+    private var templateFillIns: String = ""
     private var genericComparisonReceipt: ParsedReceipt? = null
 
     // Each row keeps references to its edit fields for save-time collection.
@@ -248,8 +251,7 @@ class ReviewActivity : AppCompatActivity() {
                 // can treat an unchanged Uri as a no-op and keep showing
                 // stale (pre-rotation) pixels. Clear first to force a
                 // genuine reload of whatever is on disk right now.
-                ivThumbnail.setImageURI(null)
-                ivThumbnail.setImageURI(Uri.parse(imageUriString))
+                BillImageLoader.load(ivThumbnail, imageUriString, 900)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -350,7 +352,9 @@ class ReviewActivity : AppCompatActivity() {
             append("Items detected: $itemCount\n")
             val templateId = matchedTemplateId
             if (templateId != null) {
-                append("Extraction mechanism: TEMPLATE ($templateId)\n")
+                append("Extraction mechanism: TEMPLATE ($templateId)")
+                if (templateFillIns.isNotEmpty()) append(" + generic fill-in for: $templateFillIns")
+                append("\n")
                 genericComparisonReceipt?.let { generic ->
                     append("Generic parser (comparison only, not used): ")
                     append("store=${generic.storeName ?: "?"}, ")
@@ -415,7 +419,22 @@ class ReviewActivity : AppCompatActivity() {
         val parsed: ParsedReceipt
         if (matchedTemplate != null) {
             val templateResult = TemplateReceiptMatcher.extract(ocrText, matchedTemplate)
-            parsed = templateResult.toParsedReceipt()
+            val fromTemplate = templateResult.toParsedReceipt()
+            // A template must never do WORSE than the generic parser: for whatever the
+            // template could not find, use what the generic parser found.
+            val filled = mutableListOf<String>()
+            var merged = fromTemplate
+            if (!merged.dateWasFound && genericParsed.dateWasFound) {
+                merged = merged.copy(dateMillis = genericParsed.dateMillis, dateWasFound = true); filled.add("date")
+            }
+            if (merged.total == null && genericParsed.total != null) {
+                merged = merged.copy(total = genericParsed.total); filled.add("total")
+            }
+            if (merged.items.isEmpty() && genericParsed.items.isNotEmpty()) {
+                merged = merged.copy(items = genericParsed.items); filled.add("items")
+            }
+            parsed = merged
+            templateFillIns = filled.joinToString(", ")
             matchedTemplateId = matchedTemplate.id
             genericComparisonReceipt = genericParsed
         } else {
@@ -595,12 +614,21 @@ class ReviewActivity : AppCompatActivity() {
         if (!storeChanged && !categoryChanged) return
 
         val sourceRawText = rawOcrText.ifBlank { PendingReceiptHolder.rawOcrText }
-        val anchorText = StoreMemoryEngine.buildAnchorText(sourceRawText) ?: return
+        // Only lines that identify the SHOP (VAT/tax number, phone, address, its own
+        // name) are worth saving; items, totals and "Summe"-type lines never repeat
+        // or match every shop, so they are left out.
+        val newAnchors = StoreMemoryEngine.extractAnchorLines(sourceRawText, finalStoreName)
+        if (newAnchors.isEmpty() || !StoreMemoryEngine.isLearnable(newAnchors, finalStoreName)) return
 
         val dao = app.database.storeMemoryDao()
-        val existingId = matchedStoreMemoryId
-        val existing = existingId?.let { id -> dao.getAll().firstOrNull { it.id == id } }
+        val all = dao.getAll()
+        // The same shop learned before (recognised on this scan, or simply the same
+        // name): update that entry instead of adding yet another duplicate.
+        val existing = matchedStoreMemoryId?.let { id -> all.firstOrNull { it.id == id } }
+            ?: all.firstOrNull { StoreMemoryEngine.sameStore(it.correctedStoreName, finalStoreName) }
+        val anchorText: String
         if (existing != null) {
+            anchorText = StoreMemoryEngine.mergeAnchorText(existing.anchorText, newAnchors, finalStoreName)
             dao.update(
                 existing.copy(
                     anchorText = anchorText,
@@ -611,6 +639,7 @@ class ReviewActivity : AppCompatActivity() {
                 )
             )
         } else {
+            anchorText = newAnchors.joinToString("\n")
             dao.insert(
                 StoreMemory(
                     anchorText = anchorText,

@@ -51,6 +51,29 @@ object PrivatePhotoStorage {
         }
     }
 
+    /**
+     * Same as [copyIntoPrivateStorage] but keeps the file as a PDF (".pdf"
+     * extension). The extension is how the rest of the app tells a PDF bill
+     * from a photo bill (see [PdfSupport.isPdf]) — no extra database column.
+     */
+    fun copyPdfIntoPrivateStorage(context: Context, sourceUri: Uri): Uri? {
+        return try {
+            val destFile = File(photosDir(context), "bill_${System.currentTimeMillis()}.pdf")
+            val input = context.contentResolver.openInputStream(sourceUri) ?: return null
+            input.use { inStream ->
+                destFile.outputStream().use { outStream -> inStream.copyTo(outStream) }
+            }
+            if (destFile.length() == 0L) {
+                destFile.delete()
+                return null
+            }
+            Uri.fromFile(destFile)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
     fun isPrivateUri(uriString: String): Boolean = uriString.startsWith("file://")
 
     /** Deletes a private-storage photo file directly — no permissions dance needed, it's the app's own file. */

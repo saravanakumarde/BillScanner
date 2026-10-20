@@ -21,8 +21,9 @@
         app:navigationIcon="@drawable/ic_back"
         app:titleTextColor="@color/white" />
 
-    <!-- Rotate controls, always available while viewing a photo. -->
+    <!-- Rotate controls, always available while viewing a photo (hidden for PDFs). -->
     <LinearLayout
+        android:id="@+id/rotateControls"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center_horizontal"
@@ -48,6 +49,46 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_rotate_right"
             android:contentDescription="@string/rotate_right"
+            android:padding="12dp" />
+    </LinearLayout>
+
+    <!-- Page navigation, shown only for a PDF with more than one page. -->
+    <LinearLayout
+        android:id="@+id/pdfNav"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="32dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="#66000000"
+        android:padding="8dp"
+        android:visibility="gone">
+
+        <ImageButton
+            android:id="@+id/btnPrevPage"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_media_previous"
+            android:contentDescription="@string/pdf_previous_page"
+            android:padding="12dp" />
+
+        <TextView
+            android:id="@+id/tvPdfPage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <ImageButton
+            android:id="@+id/btnNextPage"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_media_next"
+            android:contentDescription="@string/pdf_next_page"
             android:padding="12dp" />
     </LinearLayout>
 

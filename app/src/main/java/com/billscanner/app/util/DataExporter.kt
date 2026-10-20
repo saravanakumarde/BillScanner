@@ -158,10 +158,11 @@ object DataExporter {
         val amountPart = formatAmountForFileName(bill.totalAmount)
         val base = "${datePart}_${storePart}_$amountPart"
 
-        var candidate = "$base.jpg"
+        val ext = if (PdfSupport.isPdf(bill.imageUri)) "pdf" else "jpg"
+        var candidate = "$base.$ext"
         var counter = 2
         while (!usedNames.add(candidate)) {
-            candidate = "${base}_$counter.jpg"
+            candidate = "${base}_$counter.$ext"
             counter++
         }
         return candidate
@@ -249,8 +250,19 @@ object DataExporter {
             put("categoryId", bill.categoryId)
             put("categoryName", category?.name ?: JSONObject.NULL)
             put("notes", bill.notes)
+            // The text the OCR actually read, as the app saw it. Lets the recognition
+            // templates be checked and tuned against real scans instead of guesses.
+            put("rawOcrText", bill.rawOcrText)
             put("createdAtMillis", bill.createdAtMillis)
             put("imageFileName", imageFileName ?: JSONObject.NULL)
+            put(
+                "fileType",
+                when {
+                    imageFileName == null -> JSONObject.NULL
+                    imageFileName.endsWith(".pdf", ignoreCase = true) -> "pdf"
+                    else -> "image"
+                }
+            )
             put("items", JSONArray().apply {
                 items.forEach { item ->
                     put(JSONObject().apply {
@@ -276,7 +288,12 @@ object DataExporter {
     private fun saveImagesToSharedStorage(context: Context, images: List<File>) {
         for (image in images) {
             try {
-                writeImageToMediaStore(context, image)
+                if (image.name.endsWith(".pdf", ignoreCase = true)) {
+                    // The Pictures collection only accepts images; PDFs go to Downloads.
+                    writePdfToDownloads(context, image)
+                } else {
+                    writeImageToMediaStore(context, image)
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 // One failed image shouldn't abort the rest of the export.
@@ -311,6 +328,32 @@ object DataExporter {
             // be visible to other apps (Files, Gallery) right away.
             values.put(MediaStore.Images.Media.DATA, destFile.absolutePath)
             resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+        }
+    }
+
+    private fun writePdfToDownloads(context: Context, source: File) {
+        val resolver = context.contentResolver
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val values = ContentValues().apply {
+                put(MediaStore.Downloads.DISPLAY_NAME, source.name)
+                put(MediaStore.Downloads.MIME_TYPE, "application/pdf")
+                put(MediaStore.Downloads.RELATIVE_PATH, RELATIVE_DOWNLOAD_DIR)
+                put(MediaStore.Downloads.IS_PENDING, 1)
+            }
+            val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return
+            resolver.openOutputStream(uri)?.use { out -> source.inputStream().use { it.copyTo(out) } }
+            values.clear()
+            values.put(MediaStore.Downloads.IS_PENDING, 0)
+            resolver.update(uri, values, null, null)
+        } else {
+            @Suppress("DEPRECATION")
+            val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "BillScannerExport")
+            if (!dir.exists()) dir.mkdirs()
+            val destFile = File(dir, source.name)
+            source.copyTo(destFile, overwrite = true)
+            android.media.MediaScannerConnection.scanFile(
+                context, arrayOf(destFile.absolutePath), arrayOf("application/pdf"), null
+            )
         }
     }
 

@@ -31,6 +31,13 @@ data class ReceiptTemplate(
      * reasonable second choice.
      */
     val identifierLines: List<String>,
+    /**
+     * Optional: if not empty, at least ONE of these must also appear. Lets one
+     * template cover a chain that prints more than one VAT number (Müller
+     * receipts were seen with two different ones) or an identifier that OCR
+     * reads unreliably, without needing a copy of the whole template.
+     */
+    val identifierAnyOf: List<String> = emptyList(),
     /** ISO currency code this template assumes, e.g. "EUR". */
     val currency: String = "EUR",
     /** BCP-47-ish language hint, "de" or "en". */

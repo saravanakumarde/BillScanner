@@ -26,6 +26,7 @@ import com.billscanner.app.util.DateFormat
 import com.billscanner.app.util.GalleryStorage
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
+import com.billscanner.app.util.BillImageLoader
 
 class BillDetailActivity : AppCompatActivity() {
 
@@ -106,8 +107,7 @@ class BillDetailActivity : AppCompatActivity() {
                     // ImageView can treat an unchanged Uri as a no-op and
                     // keep showing stale (pre-rotation) pixels. Clear
                     // first to force a genuine reload from disk.
-                    ivPhoto.setImageURI(null)
-                    ivPhoto.setImageURI(Uri.parse(bill.imageUri))
+                    BillImageLoader.load(ivPhoto, bill.imageUri, 1000)
                 } catch (e: Exception) { /* ignore */ }
             } else {
                 // Manually-entered bill with no photo — hide the image

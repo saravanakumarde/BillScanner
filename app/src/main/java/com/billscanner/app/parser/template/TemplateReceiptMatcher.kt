@@ -1,5 +1,6 @@
 package com.billscanner.app.parser.template
 
+import com.billscanner.app.util.DateFinder
 import java.util.Calendar
 import java.util.regex.Pattern
 
@@ -13,20 +14,40 @@ import java.util.regex.Pattern
  */
 object TemplateReceiptMatcher {
 
-    /** Returns the first template whose [ReceiptTemplate.identifierLines] all appear in [rawText], or null. */
+    /**
+     * Identifiers are compared with spaces removed and with OCR look-alikes
+     * folded together (O/0, I/l/|/1), on BOTH sides. Real scans read the VAT
+     * number "DE147042129" as "DEl47042129", which an exact comparison misses.
+     */
+    private fun normId(s: String): String =
+        s.uppercase().filter { !it.isWhitespace() }.replace('O', '0').replace('I', '1').replace('L', '1').replace('|', '1')
+
+    /**
+     * Returns the first template whose [ReceiptTemplate.identifierLines] ALL
+     * appear in [rawText] and (when given) at least one of its
+     * [ReceiptTemplate.identifierAnyOf] does. A template with no identifiers
+     * at all never matches.
+     */
     fun findMatch(rawText: String, templates: List<ReceiptTemplate>): ReceiptTemplate? {
-        val haystack = rawText.uppercase()
+        val haystack = normId(rawText)
         return templates.firstOrNull { template ->
-            template.identifierLines.all { identifier -> haystack.contains(identifier.uppercase()) }
+            if (template.identifierLines.isEmpty() && template.identifierAnyOf.isEmpty()) return@firstOrNull false
+            template.identifierLines.all { haystack.contains(normId(it)) } &&
+                (template.identifierAnyOf.isEmpty() || template.identifierAnyOf.any { haystack.contains(normId(it)) })
         }
     }
 
     fun extract(rawText: String, template: ReceiptTemplate): TemplateParsedReceipt {
         val lines = rawText.split("\n").map { it.trim() }.filter { it.isNotEmpty() }
 
-        val (total, totalLineIndices) = extractFieldWithLineIndices(lines, template.totalRule)
-        val dateMillis = extractDate(lines, template.dateRule)
+        val (ruleTotal, totalLineIndices) = extractFieldWithLineIndices(lines, template.totalRule)
+        // If the template's own date rule finds nothing (OCR often garbles it), fall
+        // back to the shared tolerant finder rather than leave the date empty.
+        val dateMillis = extractDate(lines, template.dateRule) ?: DateFinder.find(lines)
         val items = extractItems(lines, template.itemsRule, totalLineIndices)
+        // Same for the total: a receipt's total equals the sum of its items, so if the
+        // rule found none, accept the sum when the receipt prints that very amount.
+        val total = ruleTotal ?: totalMatchingItemSum(lines, items)
 
         return TemplateParsedReceipt(
             templateId = template.id,
@@ -37,6 +58,40 @@ object TemplateReceiptMatcher {
             language = template.language,
             items = items
         )
+    }
+
+    private val moneyToken = Pattern.compile("""(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})""")
+
+    /** Amounts on a line, ignoring pieces of dates ("30.09" in "30.09.2026") and longer numbers ("11.00" in "17:46:11.000"). */
+    private fun amountsIn(line: String): List<Double> {
+        val m = moneyToken.matcher(line)
+        val out = mutableListOf<Double>()
+        while (m.find()) {
+            val end = m.end(1)
+            if (end < line.length) {
+                val c = line[end]
+                if (c.isDigit()) continue
+                if ((c == '.' || c == '-' || c == '/') && end + 1 < line.length && line[end + 1].isDigit()) continue
+            }
+            normalizeMoney(m.group(1)!!)?.let { out.add(it) }
+        }
+        return out
+    }
+
+    /**
+     * The sum of the extracted items, if the receipt itself prints that amount
+     * (on the SUMME line, in the tax table, ...). Not a guess: a wrong or
+     * partial item list will not produce an amount that appears on the receipt,
+     * so this returns null instead of a wrong total.
+     */
+    private fun totalMatchingItemSum(lines: List<String>, items: List<TemplateParsedItem>): Double? {
+        if (items.isEmpty()) return null
+        val sum = Math.round(items.sumOf { it.price } * 100) / 100.0
+        if (sum <= 0.0) return null
+        val hits = lines.count { line -> amountsIn(line).any { kotlin.math.abs(it - sum) < 0.005 } }
+        // With a single item its own price line already shows the amount, so demand a second line.
+        val needed = if (items.size == 1) 2 else 1
+        return if (hits >= needed) sum else null
     }
 
     // ---------------------------------------------------------------------

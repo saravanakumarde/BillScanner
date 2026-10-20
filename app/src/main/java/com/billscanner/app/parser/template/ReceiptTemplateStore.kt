@@ -58,7 +58,8 @@ object ReceiptTemplateStore {
         return ReceiptTemplate(
             id = obj.getString("id"),
             displayName = obj.getString("displayName"),
-            identifierLines = obj.getJSONArray("identifierLines").toStringList(),
+            identifierLines = obj.optJSONArray("identifierLines")?.toStringList() ?: emptyList(),
+            identifierAnyOf = obj.optJSONArray("identifierAnyOf")?.toStringList() ?: emptyList(),
             currency = obj.optString("currency", "EUR"),
             language = obj.optString("language", "de"),
             totalRule = TemplateFieldRule(

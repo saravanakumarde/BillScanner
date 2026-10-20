@@ -15,6 +15,7 @@ import com.billscanner.app.data.db.BillWithCategory
 import com.billscanner.app.util.CurrencyFormat
 import com.billscanner.app.util.DateFormat
 import com.google.android.material.card.MaterialCardView
+import com.billscanner.app.util.BillImageLoader
 
 class BillListAdapter(
     private val onClick: (BillWithCategory) -> Unit
@@ -73,15 +74,7 @@ class BillListAdapter(
                 tvCategory.background = bg
             }
 
-            if (item.imageUri.isNotEmpty()) {
-                try {
-                    ivThumb.setImageURI(Uri.parse(item.imageUri))
-                } catch (e: Exception) {
-                    ivThumb.setImageDrawable(null)
-                }
-            } else {
-                ivThumb.setImageDrawable(null)
-            }
+            BillImageLoader.load(ivThumb, item.imageUri, 240)
 
             card.setOnClickListener { onClick(item) }
         }

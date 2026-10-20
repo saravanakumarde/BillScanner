@@ -22,11 +22,11 @@ object CategoryMatcher {
         ),
         "Clothing" to listOf(
             "c&a", "h&m", "primark", "clothing", "kleidung", "schuhe", "shoes",
-            "jacke", "hose", "shirt"
+            "jacke", "hose", "shirt", "kik", "new yorker", "newyorker", "zalando"
         ),
         "Dining" to listOf(
             "restaurant", "café", "cafe", "bäckerei", "bakery", "imbiss",
-            "starbucks", "pizzeria", "bar", "bistro"
+            "starbucks", "pizzeria", "bar", "bistro", "kfc", "mcdonald", "burger king", "lieferando", "subway"
         ),
         "Transport" to listOf(
             "tankstelle", "gas station", "shell", "aral", "esso", "bahn",
@@ -34,7 +34,7 @@ object CategoryMatcher {
         ),
         "Household" to listOf(
             "ikea", "obi", "hornbach", "bauhaus", "möbel", "furniture",
-            "waschmittel", "reiniger", "haushalt"
+            "waschmittel", "reiniger", "haushalt", "tedi"
         ),
         "Groceries" to listOf(
             "rewe", "edeka", "aldi", "lidl", "penny", "netto", "kaufland",

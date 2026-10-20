@@ -3,6 +3,7 @@ package com.billscanner.app.parser
 import java.util.Calendar
 import java.util.Locale
 import java.util.regex.Pattern
+import com.billscanner.app.util.DateFinder
 
 /**
  * Rule-based receipt parser. No AI/cloud calls — pure regex + keyword
@@ -40,7 +41,7 @@ class ReceiptParser {
 
     // ---- Total amount keywords (German + English), longest/most specific first ----
     private val totalKeywords = listOf(
-        "gesamtsumme", "gesamtbetrag", "zu zahlen", "endbetrag",
+        "gesamtsumme", "gesamtbetrag", "zu zahlen", "zu bezahlen", "zahlbetrag", "rechnungsbetrag", "endbetrag",
         "summe", "gesamt", "total amount", "amount due", "total",
         "betrag", "bar", "kartenzahlung", "grand total"
     )
@@ -59,6 +60,11 @@ class ReceiptParser {
     // Generic money pattern: 12,34 or 12.34 or 1.234,56 or 1,234.56
     private val moneyPattern = Pattern.compile(
         """(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})\s*(EUR|€|USD|\$|GBP|£)?"""
+    )
+
+    // A line that is nothing but an amount (optionally with a currency and a tax letter): "2,59", "EUR 2,59", "2,59 B".
+    private val amountOnlyLinePattern = Regex(
+        """^(?:EUR\s*|€\s*)?-?\d{1,3}(?:[.,]\d{3})*[.,]\d{2}\s*(?:EUR|€)?\s*[A-Za-z]?$"""
     )
 
     private val currencySymbolPattern = Pattern.compile("""(€|EUR|\$|USD|£|GBP)""")
@@ -148,6 +154,7 @@ class ReceiptParser {
             // A German postal-code-plus-city line, e.g. "86152 Augsburg".
             if (Regex("""^\d{4,5}\s""").containsMatchIn(line)) continue
             if (genericHeaderWords.any { upper == it || upper.trim() == it }) continue
+            if (isJunkStoreLine(line)) continue
 
             val nextLine = lines.getOrNull(index + 1)
             if (nextLine != null && looksLikeStreetAddress(nextLine)) {
@@ -159,6 +166,40 @@ class ReceiptParser {
         return fallbackCandidate
     }
 
+    // First words that mark a line as a label or greeting, never a shop's name.
+    // Taken from names the app actually produced and you then had to fix:
+    // "Total", "Quantity", "Receipt", "Farbe 1", "Abt. 1", "SEPA transfer", ...
+    private val junkFirstWords = setOf(
+        "TOTAL", "QUANTITY", "RECEIPT", "BELEG", "BON", "KASSENBON", "KUNDENBELEG", "QUITTUNG",
+        "RECHNUNG", "INVOICE", "SUMME", "ABT", "FARBE", "GRÖSSE", "GROESSE", "DATUM", "DATE", "TIME",
+        "UHRZEIT", "ARTIKEL", "MENGE", "ANZAHL", "POSTEN", "PREIS", "PRICE", "EUR", "TEL", "FAX",
+        "DANKE", "THANK", "THANKS", "WILLKOMMEN", "WELCOME", "LIEBE", "LIEBER", "HALLO", "HELLO",
+        "DEAR", "SEPA", "TRANSFER", "ORDER", "BESTELLUNG", "HOST", "KASSE", "BEDIENER", "KUNDE",
+        "SHOP", "MARKT", "FILIALE", "TISCH", "ABHOLNUMMER", "BESTELLART", "BESTELLNUMMER",
+        "RECHNUNGSNUMMER", "KUNDENNUMMER", "GESAMT", "FROM", "TO", "AMOUNT"
+    )
+    private val timeInLineRegex = Regex("""\d{1,2}[:.]\d{2}""")
+    private val longNumberRegex = Regex("""\d{5,}""")
+    private val priceInLineRegex = Regex("""\d[.,]\d{2}(?!\d)""")
+
+    /** True for lines that can't be a store name: labels, greetings, times, ids, slogans. */
+    private fun isJunkStoreLine(line: String): Boolean {
+        val trimmed = line.trim()
+        if (KnownRetailers.isKnown(trimmed)) return false // short real names such as "dm" or "C&A"
+        val letters = trimmed.count { it.isLetter() }
+        val digits = trimmed.count { it.isDigit() }
+        if (letters < 3) return true                      // "F 5964", "10:29 9M ."
+        if (digits > letters) return true                 // mostly numbers
+        if (timeInLineRegex.containsMatchIn(trimmed)) return true
+        if (longNumberRegex.containsMatchIn(trimmed)) return true // barcodes, receipt numbers
+        if (priceInLineRegex.containsMatchIn(trimmed)) return true // an item line, never a shop name
+        if (trimmed.contains(':')) return true            // "Host/Hostess: Toker", "Beleg-Nr.: ..."
+        val words = trimmed.split(Regex("""[^A-Za-zÄÖÜäöüß]+""")).filter { it.isNotEmpty() }
+        if (words.firstOrNull()?.uppercase() in junkFirstWords) return true
+        if (words.count { it.length >= 2 } >= 5) return true // a sentence or slogan, not a name
+        return false
+    }
+
     private fun looksLikeStreetAddress(line: String): Boolean {
         val upper = line.uppercase()
         val hasStreetWord = listOf("STR.", "STRASSE", "STREET", "PLATZ", "WEG", "ALLEE", "GASSE")
@@ -168,13 +209,9 @@ class ReceiptParser {
     }
 
     private fun normalizeStoreLabel(raw: String): String {
-        // Title-case simple known names for nicer display; keep ALLCAPS
-        // brand quirks (dm, H&M) as-is where relevant.
-        return when (raw) {
-            "DM", "DM-DROGERIE" -> "dm"
-            else -> raw.split(" ").joinToString(" ") { word ->
-                if (word.length <= 2) word else word.lowercase().replaceFirstChar { it.uppercase() }
-            }
+        KnownRetailers.displayName(raw)?.let { return it }
+        return raw.split(" ").joinToString(" ") { word ->
+            if (word.length <= 2) word else word.lowercase().replaceFirstChar { it.uppercase() }
         }
     }
 
@@ -182,33 +219,8 @@ class ReceiptParser {
     // Date
     // ---------------------------------------------------------------------
     private fun detectDate(lines: List<String>): Pair<Long?, Boolean> {
-        for (line in lines) {
-            val mIso = dateIsoPattern.matcher(line)
-            if (mIso.find()) {
-                val y = mIso.group(1)!!.toInt()
-                val mo = mIso.group(2)!!.toInt()
-                val d = mIso.group(3)!!.toInt()
-                toMillisOrNull(y, mo, d)?.let { return it to true }
-            }
-            val m4Year = dateDe4YearPattern.matcher(line)
-            if (m4Year.find()) {
-                val d = m4Year.group(1)!!.toInt()
-                val mo = m4Year.group(2)!!.toInt()
-                val y = m4Year.group(3)!!.toInt()
-                toMillisOrNull(y, mo, d)?.let { return it to true }
-            }
-            val mDe = dateDePattern.matcher(line)
-            if (mDe.find()) {
-                val d = mDe.group(1)!!.toInt()
-                val mo = mDe.group(2)!!.toInt()
-                var y = mDe.group(3)!!.toInt()
-                if (y < 100) y += 2000
-                // German receipts are day.month.year; guard against an
-                // obviously-swapped ISO-like match already handled above.
-                toMillisOrNull(y, mo, d)?.let { return it to true }
-            }
-        }
-        return null to false
+        val millis = DateFinder.find(lines)
+        return millis to (millis != null)
     }
 
     private fun toMillisOrNull(year: Int, month: Int, day: Int): Long? {
@@ -242,11 +254,21 @@ class ReceiptParser {
     private fun detectTotal(lines: List<String>): Double? {
         var best: Double? = null
         // Scan bottom-up: totals are almost always near the end of a receipt.
-        for (line in lines.asReversed()) {
+        for (i in lines.indices.reversed()) {
+            val line = lines[i]
             val lower = line.lowercase(Locale.GERMAN)
             if (totalExclusionKeywords.any { lower.contains(it) }) continue
             if (totalKeywords.any { lower.contains(it) }) {
                 parseMoney(line)?.let { return it }
+                // The label can sit on its own line with the amount a line or
+                // two further down (OCR splits widely spaced columns), e.g.
+                //   SUMME / EUR / 2,59
+                for (j in (i + 1)..minOf(i + 3, lines.size - 1)) {
+                    val candidate = lines[j].trim()
+                    if (candidate.equals("EUR", ignoreCase = true) || candidate == "€") continue
+                    if (amountOnlyLinePattern.matches(candidate)) parseMoney(candidate)?.let { return it }
+                    break // anything else means this label has no amount of its own
+                }
             }
         }
         // Fallback: largest money value anywhere in the last third of the
@@ -280,9 +302,27 @@ class ReceiptParser {
         var last: Double? = null
         while (m.find()) {
             val raw = m.group(1) ?: continue
+            if (isFragmentOfDateOrLongerNumber(line, m.end(1))) continue
             last = normalizeMoneyString(raw)
         }
         return last
+    }
+
+    /**
+     * True when an amount-shaped match is really part of something else:
+     *  - a date: "30.09" inside "30.09.2026" (the day.month of a date looked like
+     *    an amount and was picked as the receipt total on five of your bills)
+     *  - a longer number: "11.00" inside the TSE timestamp "17:46:11.000", or
+     *    "0,84" inside the weight "0,848 kg"
+     *  - a clock time written with a dot: "10.29 Uhr"
+     */
+    private fun isFragmentOfDateOrLongerNumber(line: String, end: Int): Boolean {
+        if (end < line.length) {
+            val next = line[end]
+            if (next.isDigit()) return true
+            if ((next == '.' || next == '-' || next == '/') && end + 1 < line.length && line[end + 1].isDigit()) return true
+        }
+        return line.substring(end).trimStart().startsWith("uhr", ignoreCase = true)
     }
 
     private fun normalizeMoneyString(raw: String): Double? {
@@ -372,9 +412,12 @@ class ReceiptParser {
         "vu-nr", "pan #", "terminal-id", "ta-nr"
     )
 
+    private val dateInLineRegex = Regex("""\b\d{2}[.\-/]\d{2}[.\-/](?:\d{4}|\d{2})\b""")
+
     private fun isSkippableLine(line: String): Boolean {
         val lower = line.lowercase(Locale.GERMAN)
         if (skipLineKeywords.any { lower.contains(it) }) return true
+        if (dateInLineRegex.containsMatchIn(line)) return true
         // Lines that are mostly punctuation/separators (====, ****, ><><, barcodes-as-digits)
         val letterCount = line.count { it.isLetter() }
         if (letterCount == 0 && line.any { !it.isWhitespace() }) return true
